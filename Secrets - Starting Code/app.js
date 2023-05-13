@@ -37,7 +37,8 @@ async function main(){
     const userSchema = new mongoose.Schema({
         email: String,
         password: String,
-        googleId: String
+        googleId: String,
+        secret: String
     });
 
     userSchema.plugin(passportLocalMongoose);
@@ -115,15 +116,78 @@ async function main(){
         });
         
         
-    });  
+    });
+    
+    app.post("/submit", function(req,res){
+        const submittedSecret = req.body.submit;
+
+
+        console.log(req.user.id);
+
+
+       /* User.findById(req.user.id)
+        .then(function(foundUser){
+            foundUser.secret= submittedSecret;
+            foundUser.save()
+            .then(function()){
+                res.redirect("/secrets");
+            }
+        })
+        
+        .catch(function(err){
+            console.log(err);
+        });*/
+
+        User.findById(req.user.id)
+        .then(function(foundUser){
+            foundUser.secret = submittedSecret ;
+            foundUser.save()
+            .then(function(){
+                res.redirect("/secrets");
+            })
+            .catch(function(err){
+                console.log(err);
+            });
+        })
+        .catch(function(err){
+            console.log(err);
+        });
+
+
+
+    });
+
+
+   /* app.get("/secrets", function(req,res){
+        User.find({"secret": {$ne: null}}, function(err,foundUsers){
+          if(err){
+              console.log(err);
+          }else{
+              if(foundUsers){
+                  res.render("secrets", {usersWithSecrets: foundUsers});
+              }
+          }
+        });
+      });*/
+    
+      app.get("/secrets", function(req,res){
+        User.find(({"secret": {$ne: null}}))
+        .then(function(foundUsers){
+            res.render("secrets", {usersWithSecrets: foundUsers});
+        })
+        .catch(function(err){
+            console.log(err);
+        });
+
+        })
+
+
+    }
 
 
 
 
 
-
-
-}
 
 
 app.get("/", function(req,res){
@@ -149,13 +213,7 @@ app.get("/register", function(req,res){
     res.render("register");
 }); 
 
-app.get("/secrets", function(req,res){
-    if(req.isAuthenticated()){
-        res.render("secrets");
-    } else{
-        res.redirect("/login");
-    }
-});
+
 
 app.get("/logout", function(req,res,next){
     req.logout(function(err) {
@@ -164,7 +222,15 @@ app.get("/logout", function(req,res,next){
       });
     });
 
-//hii
+
+
+app.get("/submit", function(req,res){
+    if(req.isAuthenticated()){
+        res.render("submit");
+    } else{
+        res.redirect("/login");
+    }
+});
 
 
 
